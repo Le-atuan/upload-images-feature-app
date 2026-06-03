@@ -46,11 +46,13 @@
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
 
-	<!-- Access camera and microphone -->
+	<!-- Camera -->
 	<key>NSCameraUsageDescription</key>
-	<string>Explanation on why the camera access is needed.</string>
-	<!-- <key>NSMicrophoneUsageDescription</key>
-	<string>Explanation on why the microphone access is needed.</string> -->
+	<string>Ứng dụng cần quyền camera để chụp ảnh.</string>
+
+	<!-- Đọc thư viện ảnh -->
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Ứng dụng cần truy cập thư viện ảnh của bạn.</string>
 
 </dict>
 </plist>
