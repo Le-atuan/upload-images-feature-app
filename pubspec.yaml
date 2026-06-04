@@ -42,6 +42,7 @@ dependencies:
   pdf: ^3.11.3
   dio: ^5.9.2
   permission_handler: ^12.0.3
+  document_camera_frame: ^2.0.4
 
 dev_dependencies:
   flutter_test:

@@ -1,150 +1,232 @@
+import 'package:document_camera_frame/document_camera_frame.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-import 'package:flutter_doc_scanner/flutter_doc_scanner.dart';
 
-
-Future<void> main() async {
+void main() {
   runApp(const MyApp());
 }
 
-class MyApp extends StatefulWidget {
+class MyApp extends StatelessWidget {
   const MyApp({super.key});
-
-  @override
-  State<MyApp> createState() => _MyAppState();
-}
-
-class _MyAppState extends State<MyApp> {
-  dynamic _scannedDocuments;
-
-  Future<void> scanDocument() async {
-    dynamic scannedDocuments;
-    try {
-      scannedDocuments =
-          await FlutterDocScanner().getScanDocuments(page: 4) ??
-          'Unknown platform documents';
-    } on PlatformException {
-      scannedDocuments = 'Failed to get scanned documents.';
-    }
-    print(scannedDocuments.toString());
-    if (!mounted) return;
-    setState(() {
-      _scannedDocuments = scannedDocuments;
-    });
-  }
-
-  Future<void> scanDocumentAsImages() async {
-    dynamic scannedDocuments;
-    try {
-      scannedDocuments =
-          await FlutterDocScanner().getScannedDocumentAsImages(page: 4) ??
-          'Unknown platform documents';
-    } on PlatformException {
-      scannedDocuments = 'Failed to get scanned documents.';
-    }
-    print(scannedDocuments.toString());
-    if (!mounted) return;
-    setState(() {
-      _scannedDocuments = scannedDocuments;
-    });
-  }
-
-  Future<void> scanDocumentAsPdf() async {
-    dynamic scannedDocuments;
-    try {
-      scannedDocuments =
-          await FlutterDocScanner().getScannedDocumentAsPdf(page: 4) ??
-          'Unknown platform documents';
-    } on PlatformException {
-      scannedDocuments = 'Failed to get scanned documents.';
-    }
-    print(scannedDocuments.toString());
-    if (!mounted) return;
-    setState(() {
-      _scannedDocuments = scannedDocuments;
-    });
-  }
-
-  Future<void> scanDocumentUri() async {
-    //This Feature only supported for Android.
-    dynamic scannedDocuments;
-    try {
-      scannedDocuments =
-          await FlutterDocScanner().getScanDocumentsUri(page: 4) ??
-          'Unknown platform documents';
-    } on PlatformException {
-      scannedDocuments = 'Failed to get scanned documents.';
-    }
-    print(scannedDocuments.toString());
-    if (!mounted) return;
-    setState(() {
-      _scannedDocuments = scannedDocuments;
-    });
-  }
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Document Scanner Example',
-      home: Scaffold(
-        appBar: AppBar(title: const Text('Document Scanner example app')),
-        body: Center(
-          child: SingleChildScrollView(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                _scannedDocuments != null
-                    ? Text(_scannedDocuments.toString())
-                    : const Text("No Documents Scanned"),
-              ],
+      debugShowCheckedModeBanner: false,
+      home: const DocumentTypeSelectionScreen(),
+    );
+  }
+}
+
+/// Example for different document types
+class DocumentTypeSelectionScreen extends StatelessWidget {
+  const DocumentTypeSelectionScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Select Document Type'),
+      ),
+      body: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          children: [
+            _buildDocumentTypeCard(
+              context,
+              'Driver\'s License',
+              'Capture both front and back sides',
+              Icons.credit_card,
+              () => _navigateToCamera(context, DocumentType.driverLicense),
             ),
-          ),
-        ),
-        floatingActionButton: Padding(
-          padding: const EdgeInsets.only(bottom: 16.0),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.end,
-            children: [
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 8.0),
-                child: ElevatedButton(
-                  onPressed: () {
-                    scanDocument();
-                  },
-                  child: const Text("Scan Documents"),
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 8.0),
-                child: ElevatedButton(
-                  onPressed: () {
-                    scanDocumentAsImages();
-                  },
-                  child: const Text("Scan Documents As Images"),
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 8.0),
-                child: ElevatedButton(
-                  onPressed: () {
-                    scanDocumentAsPdf();
-                  },
-                  child: const Text("Scan Documents As PDF"),
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 8.0),
-                child: ElevatedButton(
-                  onPressed: () {
-                    scanDocumentUri();
-                  },
-                  child: const Text("Get Scan Documents URI"),
-                ),
-              ),
-            ],
-          ),
+            const SizedBox(height: 16),
+            _buildDocumentTypeCard(
+              context,
+              'Passport',
+              'Capture the main page only',
+              Icons.book,
+              () => _navigateToCamera(context, DocumentType.passport),
+            ),
+            const SizedBox(height: 16),
+            _buildDocumentTypeCard(
+              context,
+              'ID Card',
+              'Capture both sides',
+              Icons.badge,
+              () => _navigateToCamera(context, DocumentType.idCard),
+            ),
+          ],
         ),
       ),
     );
   }
+
+  Widget _buildDocumentTypeCard(
+    BuildContext context,
+    String title,
+    String subtitle,
+    IconData icon,
+    VoidCallback onTap,
+  ) {
+    return Card(
+      child: ListTile(
+        leading: Icon(icon, size: 40, color: Theme.of(context).primaryColor),
+        title: Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
+        subtitle: Text(subtitle),
+        trailing: const Icon(Icons.arrow_forward_ios),
+        onTap: onTap,
+      ),
+    );
+  }
+
+  void _navigateToCamera(BuildContext context, DocumentType documentType) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) =>
+            _buildCameraForDocumentType(context, documentType),
+      ),
+    );
+  }
+
+  Widget _buildCameraForDocumentType(
+      BuildContext context, DocumentType documentType) {
+    switch (documentType) {
+      case DocumentType.driverLicense:
+        return DocumentCameraFrame(
+          frameWidth: 320,
+          frameHeight: 200,
+          titleStyle: const DocumentCameraTitleStyle(
+            frontSideTitle: Text('Scan Front of License',
+                style: TextStyle(color: Colors.white)),
+            backSideTitle: Text('Scan Back of License',
+                style: TextStyle(color: Colors.white)),
+          ),
+          requireBothSides: true,
+          enableAutoCapture: true,
+          // Callbacks
+          onFrontCaptured: (imagePath) {
+            debugPrint('Front side captured: $imagePath');
+            // You can perform additional actions here
+            // such as uploading to server, saving locally, etc.
+          },
+
+          onBackCaptured: (imagePath) {
+            debugPrint('Back side captured: $imagePath');
+            // You can perform additional actions here
+          },
+
+          onBothSidesSaved: (documentData) {
+            debugPrint('Document capture completed!');
+            debugPrint('Front: ${documentData.frontImagePath}');
+            debugPrint('Back: ${documentData.backImagePath}');
+            debugPrint('Is complete: ${documentData.isComplete}');
+
+            // Navigate to next screen or process the captured document
+            _handleDocumentSaved(context, documentData);
+          },
+        );
+
+      case DocumentType.passport:
+        return DocumentCameraFrame(
+          frameWidth: 300,
+          frameHeight: 450,
+          titleStyle: const DocumentCameraTitleStyle(
+            title: Text('Scan Passport', style: TextStyle(color: Colors.white)),
+          ),
+          buttonStyle: const DocumentCameraButtonStyle(
+            actionButtonHeight: 40,
+          ),
+          sideIndicatorStyle: const DocumentCameraSideIndicatorStyle(
+            showSideIndicator: false,
+          ),
+          instructionStyle: const DocumentCameraInstructionStyle(
+            frontSideInstruction:
+                "Position the main page of your passport within the frame",
+          ),
+          requireBothSides: false,
+          enableAutoCapture: false,
+          onBothSidesSaved: (data) {
+            debugPrint('Passport captured');
+            Navigator.of(context).pop();
+          },
+        );
+
+      case DocumentType.idCard:
+        return DocumentCameraFrame(
+          frameWidth: 320,
+          frameHeight: 200,
+          titleStyle: const DocumentCameraTitleStyle(
+            frontSideTitle:
+                Text('Scan Front of ID', style: TextStyle(color: Colors.white)),
+            backSideTitle:
+                Text('Scan Back of ID', style: TextStyle(color: Colors.white)),
+          ),
+          sideIndicatorStyle: const DocumentCameraSideIndicatorStyle(
+            showSideIndicator: false,
+          ),
+          requireBothSides: true,
+          enableAutoCapture: true,
+          onBothSidesSaved: (documentData) {
+            // Handle the saved document
+            _processDocument(context, documentData);
+            Navigator.of(context).pop();
+          },
+        );
+    }
+  }
+
+  void _handleDocumentSaved(
+      BuildContext context, DocumentCaptureData documentData) {
+    // Show success dialog
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Document Captured Successfully'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text('Your document has been captured successfully.'),
+            const SizedBox(height: 10),
+            Text(
+                'Front side: ${documentData.frontImagePath != null ? "✓" : "✗"}'),
+            Text(
+                'Back side: ${documentData.backImagePath != null ? "✓" : "✗"}'),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop(); // Close dialog
+              Navigator.of(context).pop(); // Go back to previous screen
+            },
+            child: const Text('OK'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  static void _processDocument(
+      BuildContext context, DocumentCaptureData documentData) {
+    // Process the captured document data
+    final hasBackSide = documentData.backImagePath != null;
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          hasBackSide
+              ? 'Document captured with both sides!'
+              : 'Document captured (front side only)',
+        ),
+        backgroundColor: Colors.green,
+      ),
+    );
+  }
+}
+
+enum DocumentType {
+  driverLicense,
+  passport,
+  idCard,
 }
